@@ -2,7 +2,18 @@
   <artifact type="jar" name="NarrativeContainer:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/NarrativeContainer_jar</output-path>
     <root id="archive" name="NarrativeContainer.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../../Program Files/JavaFx/Win/javafx-sdk-17.0.21/lib/javafx.base.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../../Program Files/JavaFx/Win/javafx-sdk-17.0.21/lib/javafx.controls.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../../../../Program Files/JavaFx/Win/javafx-sdk-17.0.21/lib/javafx.fxml.jar" path-in-jar="/" />
       <element id="module-output" name="NarrativeContainer" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/mysql-connector-j-26.10.0/mysql-connector-j-26.10.0/mysql-connector-j-26.10.0.jar" path-in-jar="/" />
+      <element id="dir-copy" path="$PROJECT_DIR$/../../../../../Program Files/JavaFx/Win/javafx-sdk-17.0.21/lib" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/javafx-graphics-17.0.12-win.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/javafx-graphics-17.0.12-mac.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/javafx-graphics-17.0.12-mac-aarch64.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

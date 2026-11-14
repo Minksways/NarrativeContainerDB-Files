@@ -20,6 +20,100 @@ import javafx.scene.control.TextField;
  * as long as it is true.*/
 public class MainController {
 
+    private void initializeDatabaseConnection() {
+        System.out.println("\n=========================================");
+        System.out.println("===== MySQL Database Login Setup ========");
+        System.out.println("=========================================");
+
+        while (true) {
+            System.out.println("Enter MySQL Server Address (e.g., localhost:3306 or 127.0.0.1)");
+            System.out.print("Enter here: ");
+            String serverAddress = scanner.nextLine().trim();
+
+            System.out.print("Enter MySQL Username: ");
+            String username = scanner.nextLine().trim();
+
+            System.out.print("Enter MySQL Password: ");
+            String password = scanner.nextLine().trim();
+
+            this.dbController = new DatabaseController(serverAddress, username, password);
+
+            if (dbController.testConnection()) {
+                System.out.println("[SUCCESS] Connected to NarrativeContainerDB!\n");
+                break;
+            } else {
+                System.out.println("[ERROR] Connection failed. Check your server address, " +
+                        "username, or password and try again.\n");
+            }
+        }
+    }
+
+    @FXML
+    public void initialize() {
+        while (true) {
+            javafx.scene.control.Dialog<javafx.util.Pair<String, javafx.util.Pair<String,
+                    String>>> loginDialog = new javafx.scene.control.Dialog<>();
+            loginDialog.setTitle("MySQL Database Connection");
+            loginDialog.setHeaderText("Enter your MySQL database credentials to connect:");
+
+            javafx.scene.control.ButtonType connectButtonType =
+                    new javafx.scene.control.ButtonType("Connect", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+            loginDialog.getDialogPane().getButtonTypes().addAll(connectButtonType, javafx.scene.control.ButtonType.CANCEL);
+
+            javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+
+            javafx.scene.control.TextField hostField = new javafx.scene.control.TextField();
+            hostField.setPromptText("e.g., localhost:3306");
+            javafx.scene.control.TextField userField = new javafx.scene.control.TextField();
+            userField.setPromptText("Username");
+            javafx.scene.control.PasswordField passField = new javafx.scene.control.PasswordField();
+            passField.setPromptText("Password");
+
+            grid.add(new javafx.scene.control.Label("Server Address:"), 0, 0);
+            grid.add(hostField, 1, 0);
+            grid.add(new javafx.scene.control.Label("Username:"), 0, 1);
+            grid.add(userField, 1, 1);
+            grid.add(new javafx.scene.control.Label("Password:"), 0, 2);
+            grid.add(passField, 1, 2);
+
+            loginDialog.getDialogPane().setContent(grid);
+
+            loginDialog.setResultConverter(dialogButton -> {
+                if (dialogButton == connectButtonType) {
+                    return new javafx.util.Pair<>(hostField.getText().trim(),
+                            new javafx.util.Pair<>(userField.getText().trim(), passField.getText()));
+                }
+                return null;
+            });
+
+            java.util.Optional<javafx.util.Pair<String, javafx.util.Pair<String, String>>> result = loginDialog.showAndWait();
+
+            if (!result.isPresent()) {
+                javafx.application.Platform.exit();
+                System.exit(0);
+                return;
+            }
+
+            String host = result.get().getKey();
+            String user = result.get().getValue().getKey();
+            String pass = result.get().getValue().getValue();
+
+            this.dbController = new DatabaseController(host, user, pass);
+
+            if (dbController.testConnection()) {
+                showAlert("Connected", "Successfully connected to NarrativeContainerDB!");
+                break;
+            } else {
+                showAlert("Connection Failed", "Could not connect to MySQL. " +
+                        "Check your server address, username, or password and try again.");
+            }
+        }
+    }
+
+
     @FXML private Label guiIdDisplay;
     @FXML private Label guiStateLabel;
     @FXML private Label guiLocationLabel;
@@ -28,7 +122,7 @@ public class MainController {
     @FXML private TextArea guiBackstoryArea;
     @FXML private TextField guiSearchIdInput;
 
-    // Sets up blank space for the window Narrative container
+    // Sets up blank space for inserts in the window app of Narrative container
     public void clearDashboardToBlank() {
         this.activeCharacter = null;
         guiIdDisplay.setText("No Character Loaded");
@@ -277,13 +371,11 @@ public class MainController {
     @FXML
     private void handleCommitIncrement() {
         if (activeCharacter == null) {
-            showAlert("Warning",
-                    "No character ID is currently selected.");
+            showAlert("Warning", "No character ID is currently selected.");
             return;
         }
 
         List<Characters> all = ReadAllFromFile();
-
         String nextVersionID = IsDuplicate(activeCharacter.getCharacterID(), all);
 
         Characters incrementedChar = new Characters(
@@ -295,15 +387,17 @@ public class MainController {
         );
 
         all.add(incrementedChar);
-
-
         this.activeCharacter = incrementedChar;
+
+        if (dbController != null) {
+            dbController.insertCharacter(incrementedChar);
+        }
         WriteAllToFile(all);
         loadCharacterData(activeCharacter);
 
-        showAlert("Success", "All element changes made! creating new increment: "
-                + nextVersionID);
+        showAlert("Success", "All element changes made! Creating new increment: " + nextVersionID);
     }
+
 
     @FXML
     private void handleGuiReadByEntry() {
@@ -462,6 +556,7 @@ public class MainController {
             }
 
             List<Characters> masterList = ReadAllFromFile();
+            int DatabaseStorage = masterList.size();
             int successfulImports = 0;
 
             try (BufferedReader br = new BufferedReader(new FileReader(targetFile))) {
@@ -475,6 +570,11 @@ public class MainController {
                 }
 
                 if (successfulImports > 0) {
+                    if (dbController != null) {
+                        for (int i = DatabaseStorage; i < masterList.size(); i++) {
+                            dbController.insertCharacter(masterList.get(i));
+                        }
+                    }
                     WriteAllToFile(masterList);
                     showAlert("Batch Processing Complete",
                             "Successfully parsed, ordered, and committed " +
@@ -499,6 +599,8 @@ public class MainController {
     private final String TextFileName = "Characters.txt";
 
     private final Scanner scanner;
+
+    private DatabaseController dbController;
 
     // isRunning is used to keep a true state for the program running and displaying.
     private boolean isRunning;
@@ -822,6 +924,7 @@ public class MainController {
         String finalPath = filePathInput;
 
         List<Characters> allCharacters = ReadAllFromFile();
+        int databaseStorage = allCharacters.size();
         int importedCount = 0;
 
         try (BufferedReader br = new BufferedReader(new FileReader(finalPath))) {
@@ -853,6 +956,7 @@ public class MainController {
             System.out.println("[ERROR] Cannot read or locate target file path: " + finalPath);
         }
     }
+
     // Entry ID Updater by elements in row
     private void UpdateEntryID() {
         System.out.println("\n--- Update Existing Character ---");
@@ -879,7 +983,7 @@ public class MainController {
         System.out.print("Enter Current State (True or False) ");
         System.out.print("\nType here: ");
         String newState = scanner.nextLine().trim().toLowerCase();
-        if (!newState.equals("true") && !newState.equals("false")) {
+        if (!newState.matches("true|false|t|f")) {
             System.out.println("[ERROR] Invalid State. Update aborted.");
             return;
         }
@@ -895,7 +999,7 @@ public class MainController {
         System.out.print("\nEnter ImportanceState (True or False) ");
         System.out.print("\nType here: ");
         String newImp = scanner.nextLine().trim().toLowerCase();
-        if (!newImp.equals("true") && !newImp.equals("false")) {
+        if (!newState.matches("true|false|t|f")) {
             System.out.println("[ERROR] Invalid State. Update aborted.");
             return;
         }
@@ -991,32 +1095,52 @@ public class MainController {
 
     public boolean addCharacter(List<Characters> currentList, String id, boolean state,
                                 String loc, boolean imp, String desc) {
-        if (id == null || id.isEmpty() || loc == null
-                || loc.isEmpty() || desc == null || desc.isEmpty()) {
+        if (id == null || id.isEmpty() ||
+                loc == null || loc.isEmpty() || desc == null || desc.isEmpty()) {
             return false;
         }
-        boolean success = currentList.add(new Characters(id, state, loc, imp, desc));
-        if (success) {
-            WriteAllToFile(currentList);
+        Characters newChar = new Characters(id, state, loc, imp, desc);
+        boolean success = currentList.add(newChar);
+        if (success && dbController != null) {
+            boolean dbSaved = dbController.insertCharacter(newChar);
+            if (dbSaved) {
+                WriteAllToFile(currentList);
+            }
+            return dbSaved;
         }
         return success;
     }
 
     public boolean deleteCharacter(String targetID, List<Characters> currentList) {
         if (targetID == null || targetID.isEmpty()) return false;
-        boolean wasRemoved = currentList.removeIf(ch -> ch.getCharacterID().trim().equalsIgnoreCase(targetID.trim()));
-        if (wasRemoved) {
-            WriteAllToFile(currentList);
+        boolean wasRemoved = currentList.removeIf(ch ->
+                ch.getCharacterID().trim().equalsIgnoreCase(targetID.trim()));
+        if (wasRemoved && dbController != null) {
+            boolean dbDeleted = dbController.deleteCharacterByID(targetID);
+            if (dbDeleted) {
+                WriteAllToFile(currentList);
+            }
+            return dbDeleted;
         }
         return wasRemoved;
     }
 
     public boolean updateCharacter(List<Characters> currentList, String nextVersionID, String state,
                                    String loc, String imp, String desc) {
-        boolean success = currentList.add(new Characters(nextVersionID, Boolean.parseBoolean(state),
-                loc, Boolean.parseBoolean(imp), desc));
-        if (success) {
-            WriteAllToFile(currentList);
+        boolean parsedState = state != null && (state.trim().equalsIgnoreCase("true") ||
+                state.trim().equalsIgnoreCase("t"));
+        boolean parsedImp = imp != null && (imp.trim().equalsIgnoreCase("true") ||
+                imp.trim().equalsIgnoreCase("t"));
+
+        Characters updatedChar = new Characters(nextVersionID, Boolean.parseBoolean(state),
+                loc, Boolean.parseBoolean(imp), desc);
+        boolean success = currentList.add(updatedChar);
+        if (success && dbController != null) {
+            boolean dbSaved = dbController.insertCharacter(updatedChar);
+            if (dbSaved) {
+                WriteAllToFile(currentList);
+            }
+            return dbSaved;
         }
         return success;
     }
@@ -1101,8 +1225,12 @@ public class MainController {
         }
     }
     private List<Characters> ReadAllFromFile() {
+        if (dbController != null) {
+            return dbController.readAllFromDB();
+        }
         return ReadAllFromFile(TextFileName);
     }
+
 
 
     public List<Characters> ReadAllFromFile(String customFilePath) {
@@ -1154,11 +1282,21 @@ public class MainController {
             }
         });
 
-        // How it is added into the text tile
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(TextFileName, false))) {
+        // 1. Always updates Characters.txt in the active launch folder
+        writeCsvToPath(list, TextFileName);
+
+        // 2. If running from out/artifacts/NarrativeContainer_jar, also syncs the root project Characters.txt
+        java.io.File projectRootCopy = new java.io.File("../../../" + TextFileName);
+        if (projectRootCopy.exists() && projectRootCopy.isFile()) {
+            writeCsvToPath(list, projectRootCopy.getPath());
+        }
+    }
+
+    private void writeCsvToPath(List<Characters> list, String targetPath) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(targetPath, false))) {
             for (Characters ch : list) {
                 String csvRow = String.format("%s, %b, %s, %b, %s",
-     ch.getCharacterID(),
+                        ch.getCharacterID(),
                         ch.getCurrentState(),
                         ch.getLocation(),
                         ch.getImportanceState(),
@@ -1167,14 +1305,15 @@ public class MainController {
                 bw.write(csvRow);
                 bw.newLine();
             }
-            // Error for if failure to add was found
         } catch (IOException e) {
-            System.out.println("[ERROR] File writing failed: " + e.getMessage());
+            System.out.println("[ERROR] File writing failed for " + targetPath + ": " + e.getMessage());
         }
     }
 
+
     // Starts the program loop when called
     public void start() {
+        initializeDatabaseConnection();
         while (isRunning) {
             DisplayMenu();
             int choice = UserChoice();
