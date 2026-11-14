@@ -1,0 +1,1 @@
+This is a new repository for just the project NarrativeContainrDB, it is a Java IDE project that has been worked on for this semester so far and the wmost recent changes introduced MySQL functions and MacOS connectivity.
