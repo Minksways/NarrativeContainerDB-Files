@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  File: MainView.fxml
+  Controller: MainController
+  Description: Main JavaFX dashboard layout for NarrativeContainer.
+  Provides UI controls to search, create, edit, commit increments, delete, and run batch uploads against the MySQL database.
+-->
+
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>

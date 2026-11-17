@@ -15,11 +15,22 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
-/* We have our beginning section for reading the downloads folder of a users computer containing the
- * Characters.txt text file and running function to allow the program to keep looping/running
- * as long as it is true.*/
+/** We have our beginning section here which is the main controller for both JavaFX GUI and Operations for the rest of
+ * the project to change entries for Narrative Container.
+ * <p>
+ * This Class also accesses the user authentication and connection to the MySQL Database ({@code NarrativeContainerDB}),
+ * Uses CRUD Operations to change entries information, a batch upload can be used or manual entry, text files and database
+ * are synced with local CSV ({@code Characters.txt})
+ * </p>
+ *
+ * @author Michael (Minks) Cortes Muniz
+ */
 public class MainController {
 
+    /**
+     * Will Start a prompt scanner to get user login credentials for the MySQL Server Login and connect to the database,
+     * ({@link DatabaseController}) then starting the interface for interacting with the Entries.
+     * */
     private void initializeDatabaseConnection() {
         System.out.println("\n=========================================");
         System.out.println("===== MySQL Database Login Setup ========");
@@ -48,6 +59,11 @@ public class MainController {
         }
     }
 
+    /**
+     * JavaFX for the FXML layout to open a window display GUI for changing information in the Database/Text Files. Loops
+     * until valid credentials for MySQL login and connection are true.
+     *
+     */
     @FXML
     public void initialize() {
         while (true) {
@@ -114,15 +130,24 @@ public class MainController {
     }
 
 
+    /** JavaFX Label for current loaded Character ID*/
     @FXML private Label guiIdDisplay;
+    /** JavaFX Label for showing current selected if the character is alive or dead*/
     @FXML private Label guiStateLabel;
+    /** JavaFX Label for showing the current location of the character*/
     @FXML private Label guiLocationLabel;
+    /** JavaFX Label for showing the current importance of the character*/
     @FXML private Label guiImportanceLabel;
+    /** JavaFX Label for showing the current characters backstory*/
     @FXML private Label guiDescriptionLabel;
+    /** JavaFX text area for displaying a scrollable section of the backstory for if the section is lengthly*/
     @FXML private TextArea guiBackstoryArea;
+    /** JavaFX input field for searching with a characters ID in the Database*/
     @FXML private TextField guiSearchIdInput;
 
-    // Sets up blank space for inserts in the window app of Narrative container
+    /**
+     * Resets the first instance of opening the app to set up blank space placeholder of the Narrative container entries
+     */
     public void clearDashboardToBlank() {
         this.activeCharacter = null;
         guiIdDisplay.setText("No Character Loaded");
@@ -133,6 +158,9 @@ public class MainController {
         guiBackstoryArea.clear();
     }
 
+    /**
+     * Handles GUI ID search by using {@code guiSearchInput} against the current database to find the ID entered
+     */
     @FXML
     private void handleSearchByID() {
         String searchID = guiSearchIdInput.getText().trim();
@@ -162,6 +190,12 @@ public class MainController {
     }
 
 
+    /**
+     * Displays JavaFX alert dialog ro communicate errors or successful updates
+     *
+     * @param title     The window displayed
+     * @param message   The text shown to users
+     */
     private void showAlert(String title, String message) {
         javafx.scene.control.Alert alert =
                 new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
@@ -171,6 +205,11 @@ public class MainController {
         alert.showAndWait();
     }
 
+    /**
+     * Loads al JavaFX Components with the chosen entry in each element {@link Characters} sets as current character
+     *
+     * @param ch The {@link Characters} display on dashboard, will ignore if {@code null}
+     */
     public void loadCharacterData(Characters ch) {
         if (ch == null) return;
         this.activeCharacter = ch;
@@ -186,6 +225,13 @@ public class MainController {
         guiBackstoryArea.setText(ch.getCharacterDescription());
     }
 
+    /**
+     * Updates a single attribute chosen of the current loaded character {@code activeCharacter} and refreshes the dashboard
+     * before the new incremented entry is made.
+     *
+     * @param targetField   Allows for modifying ({@code "State"}, {@code "location"}, {code "importance"}, or {@code "description"}).
+     * @param newValue      The updated value of the attribute.
+     */
     private void WindowEditReadWrite(String targetField, String newValue) {
         if (activeCharacter == null) return;
 
@@ -195,7 +241,7 @@ public class MainController {
         boolean finalImp = targetField.equals("importance") ? Boolean.parseBoolean(newValue) : activeCharacter.getImportanceState();
         String finalDesc = targetField.equals("description") ? newValue : activeCharacter.getCharacterDescription();
 
-        //STAGE IN MEMORY
+        //In memory
         this.activeCharacter = new Characters(activeCharacter.getCharacterID(), finalState,
                 finalLoc, finalImp, finalDesc);
 
@@ -203,6 +249,9 @@ public class MainController {
         loadCharacterData(activeCharacter);
     }
 
+    /**
+     * JavaFX choice dialog Living state True t ({@code True} or False f {@code False}) of the current character.
+     */
     @FXML
     private void handleEditState() {
         // Will only allow the + buttons ot work if there is information/ID opened
@@ -221,6 +270,9 @@ public class MainController {
         });
     }
 
+    /**
+     * JavaFX text input to allow the location in the world
+     */
     @FXML
     private void handleEditLocation() {
         if (activeCharacter == null) { showAlert("Error",
@@ -238,6 +290,9 @@ public class MainController {
         });
     }
 
+    /**
+     * JavaFX choice dialog for Importance state True t ({@code True} or False f {@code False}) of the current character.
+     */
     @FXML
     private void handleEditImportance() {
         if (activeCharacter == null) { showAlert("Error",
@@ -255,6 +310,9 @@ public class MainController {
         });
     }
 
+    /**
+     * JavaFX text input area to allowing for changing the backstory of the character.
+     */
     @FXML
     private void handleEditDescription() {
         if (activeCharacter == null) { showAlert("Error",
@@ -282,6 +340,9 @@ public class MainController {
         });
     }
 
+    /**
+     * Prompts for new ID number via a JavaFX dialog, validates it is new and will increment if it is an existing ID.
+     */
     @FXML
     private void handleGuiCreateEntry() {
         //
@@ -329,6 +390,9 @@ public class MainController {
         });
     }
 
+    /**
+     * Confirmation dialog, upon user confirmation will permanently delete the selected entry loaded in the window.
+     */
     @FXML
     private void handleGuiDelete() {
         if (activeCharacter == null) {
@@ -368,6 +432,9 @@ public class MainController {
         });
     }
 
+    /**
+     * Commits the selected {@code activeCharacter} modifications as a new increment, updating database and text files.
+     */
     @FXML
     private void handleCommitIncrement() {
         if (activeCharacter == null) {
@@ -399,6 +466,9 @@ public class MainController {
     }
 
 
+    /**
+     * Will show a read only version fo a selected character entry if that ID is valid.
+     */
     @FXML
     private void handleGuiReadByEntry() {
         javafx.scene.control.TextInputDialog idPrompt = new javafx.scene.control.TextInputDialog();
@@ -485,6 +555,9 @@ public class MainController {
     }
 
 
+    /**
+     * Opens a second scrollable JavaFX window showing all current entries available in the database.
+     */
     @FXML
     private void handleGuiReadAll() {
         javafx.stage.Stage logStage = new javafx.stage.Stage();
@@ -537,6 +610,10 @@ public class MainController {
         logStage.show();
     }
 
+    /**
+     * Asks for a text file path/file name via JavaFX input dialog (Characters_BatchTester.txt),
+     * parses the CSV line into {@link Characters} and inserts them into the Database and text files.
+     */
     @FXML
     private void handleGuiBatchUpload() {
         javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
@@ -592,27 +669,33 @@ public class MainController {
     }
 
 
-    // Track the character currently on screen
+    /** Tracks the {@link Characters} currently loaded. */
     private Characters activeCharacter;
 
-    // Reads Characters.txt file here in the project and the Jar now
+    /** The text file use for storage and syncing across the project. */
     private final String TextFileName = "Characters.txt";
 
+    /** Input scanner for reading user inputs and validating them. */
     private final Scanner scanner;
 
+    /** Database Controller connection used to execute valid inputs into the MySQL from project. */
     private DatabaseController dbController;
 
-    // isRunning is used to keep a true state for the program running and displaying.
+    /** isRunning is used to keep a true state for the program running and displaying. */
     private boolean isRunning;
-    /* IDExists keeps track if a current entry exists in the file
-    to then increment it with custom function */
+    /** IDExists keeps track if a current entry exists in the file to then increment it. */
     private boolean IDExists = false;
 
+
+    /**
+     * Makes a new {@code MainController} run , starts the scanner and main loop for active runtime.
+     */
     public MainController() {
         this.scanner = new Scanner(System.in);
         this.isRunning = true;
     }
-    // Main Menu display for all choices and submenu buttons
+
+    /** Main Menu display for all choices and submenu buttons. */
     private void DisplayMenu() {
         System.out.println("\n=========================================================");
         System.out.println("===== CRUD Operations Testing in IDE Console or CLI =====");
@@ -624,7 +707,11 @@ public class MainController {
         System.out.println("\n=========================================================");
     }
 
-    // User Choice Inputs Handler to have an area to type and go to next line.
+    /**
+     * User Choice Inputs Handler to have an area to type and go to next line.
+     *
+     * @return The numbers 1-4 choices outcomes or the default which loops {@code -1} if a non number was entered.
+     */
     private int UserChoice() {
         System.out.print("Type here: ");
         if (!scanner.hasNextInt()) {
@@ -636,6 +723,11 @@ public class MainController {
         return choice;
     }
 
+    /**
+     * Changes submenus from main menu depending on CRUD method chosen.
+     *
+     * @param choice The numbers 1-4 choices outcomes or the default which loops {@code -1} if a non number was entered.
+     */
     // Choices for Main Menu
     private void MenuChoiceOutcomes(int choice) {
         switch (choice) {
@@ -659,7 +751,9 @@ public class MainController {
     }
 
 
-    // Sub Menu display for adding/creating an entry
+    /**
+     * Sub Menu display for adding/creating an entry
+     */
     private void SubMenuCreate() {
         boolean DisplaySubMenu = true;
 
@@ -702,7 +796,9 @@ public class MainController {
     }
 
 
-    // Sub Menu Display for reading entries
+    /**
+     * Sub Menu Display for reading entries
+     */
     private void SubMenuRead() {
         boolean DisplayReadMenu = true;
 
@@ -743,7 +839,9 @@ public class MainController {
     }
 
 
-    // Sub Menu display for both updating and deleting
+    /**
+     * Sub Menu display for both updating and deleting
+     */
     private void SubMenuUpdateDelete() {
         boolean DisplayUpdateDeleteMenu = true;
 
@@ -783,6 +881,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Users go element by element console prompts for manually making a new entry {@link Characters} and will increment
+     * if the ID is already in use. Allows for cancelling in the middle of the entry if you type cancel or cm {@code 'cancel'},
+     * {@code 'cm'}
+     *
+     */
     private void CharacterEntry() {
         System.out.println("\n--- Manual Create Character Entry ---");
         List<Characters> allCharacters = ReadAllFromFile();
@@ -833,7 +937,7 @@ public class MainController {
 
             if (input.equalsIgnoreCase("cancel")
                     || input.equalsIgnoreCase("cm")) {
-                System.out.println("[INFO] Manual character entry operation completely canceled.");
+                System.out.println("Manual character entry operation completely canceled.");
                 return;
             }
 
@@ -857,7 +961,7 @@ public class MainController {
 
             if (LocationInput.equalsIgnoreCase("cancel")
                     || LocationInput.equalsIgnoreCase("cm")) {
-                System.out.println("[INFO] Manual character entry operation completely canceled.");
+                System.out.println("Manual character entry operation completely canceled.");
                 return;
             }
             if (LocationInput.isEmpty()) {
@@ -874,7 +978,7 @@ public class MainController {
 
             if (input.equalsIgnoreCase("cancel")
                     || input.equalsIgnoreCase("cm")) {
-                System.out.println("[INFO] Manual character entry operation completely canceled.");
+                System.out.println("Manual character entry operation completely canceled.");
                 return;
             }
             if (!input.equalsIgnoreCase("true")
@@ -913,7 +1017,12 @@ public class MainController {
             System.out.print("[Success] Created Character Entry into '" + TextFileName + "' file\n");
         }
     }
-    // batch uploading using the Characters_BatchTester.txt,txt file
+
+    /**
+     * Prompts for a path/text file name, parses each valid character entry line with {@link #parseBatchLine(String, List)}
+     * writes and merges with existing stored area.
+     */
+    // batch uploading using the Characters_BatchTester.txt file
     private void CharacterEntryBatch() {
         System.out.println("\n--- Batch Upload Character Entry ---");
         System.out.print("Enter path to Text file: ");
@@ -957,7 +1066,10 @@ public class MainController {
         }
     }
 
-    // Entry ID Updater by elements in row
+    /**
+     * Asks for an existing ID, increments it to next available increment number, updates the changed attributes and
+     * commits changes with {@link #updateCharacter(List, String, String, String, String, String)}.
+     * */
     private void UpdateEntryID() {
         System.out.println("\n--- Update Existing Character ---");
         System.out.println("Enter base Character ID to update (1 or 1.1) ");
@@ -1020,7 +1132,10 @@ public class MainController {
         }
     }
 
-    // Remove via ID display
+    /**
+     * Targets a specific ID to delete from stored permanently using {@link #deleteCharacter(String, List)}, and we cancel
+     * this process with cancel {@code 'cancel'} or cm {@code 'cm'}.
+     */
     private void RemoveEntryID() {
         System.out.println("\n--- Delete Character Entry ---");
         System.out.print("Enter Character ID to remove [or type 'cancel'/'cm' to abort]: ");
@@ -1044,6 +1159,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Retrieves all character entries and displays/prints them
+     * into the console formated as shown in the print order below as a full list.
+     */
     private void DisplayAllCharacters() {
         System.out.println("\n--- Displaying Entire Character Entries in file ---");
         List<Characters> allCharacters = ReadAllFromFile();
@@ -1066,6 +1185,9 @@ public class MainController {
         }
     }
 
+    /**
+     * Asks the User for an ID via the console and prints them in the order shown below as a single entry.
+     */
     private void DisplayCharacterByID() {
         System.out.println("\n--- Search Character By ID ---");
         System.out.print("Enter Character ID to search: ");
@@ -1093,6 +1215,17 @@ public class MainController {
     }
 
 
+    /**
+     * Validates and adds {@link Characters}  to the MySQL Database of NarrativeContainerDB
+     *
+     * @param currentList   The Current list to add to {@link Characters}
+     * @param id            Verified ID
+     * @param state         Living State
+     * @param loc           The Characters location
+     * @param imp           Importance State
+     * @param desc          Character backstory
+     * @return              {@code true} if successfully added, {@code false} if failed to add.
+     */
     public boolean addCharacter(List<Characters> currentList, String id, boolean state,
                                 String loc, boolean imp, String desc) {
         if (id == null || id.isEmpty() ||
@@ -1111,6 +1244,13 @@ public class MainController {
         return success;
     }
 
+    /**
+     * Removes the character entry via ID {@code targetID} from the database
+     *
+     * @param targetID      The ID to remove
+     * @param currentList   The current list to remove from {@link Characters}
+     * @return              {@code true} takes out matching ID, {@code false} failed to removed
+     */
     public boolean deleteCharacter(String targetID, List<Characters> currentList) {
         if (targetID == null || targetID.isEmpty()) return false;
         boolean wasRemoved = currentList.removeIf(ch ->
@@ -1125,6 +1265,17 @@ public class MainController {
         return wasRemoved;
     }
 
+    /**
+     * Commits a newly incremented character ID as a new entry and inserts it into the database
+     *
+     * @param currentList       Current list being used to update to {@link Characters}
+     * @param nextVersionID     The new ID Incremented from the previous version, ({@code "1.2"} --> {@code "1.3"} for example)
+     * @param state             Living State
+     * @param loc               The Characters location
+     * @param imp               Importance State
+     * @param desc              Character backstory
+     * @return                  {@code true} if added successfully, {@code false} if failed.
+     */
     public boolean updateCharacter(List<Characters> currentList, String nextVersionID, String state,
                                    String loc, String imp, String desc) {
         boolean parsedState = state != null && (state.trim().equalsIgnoreCase("true") ||
@@ -1145,9 +1296,15 @@ public class MainController {
         return success;
     }
 
-    /* The custom method for incrementing ID inputs that exists and increments to the next
-    available ID (1 + .1)
-    */
+    /**
+     * The custom method for incrementing ID inputs that exists and increments to the next
+     available ID (1 + .1), uses {@code targetID} to see ID number, {@code existingList} to see if it exists as ID already,
+     and then uses {@code IDExists} to actually set the new increment.
+     * @param targetID          The ID being chosen
+     * @param existingList      Current list ID is being checked agaisnt {@link Characters}
+     * @return                  If new number is used during the inserted ID {@code targetID} it will be kept like that,
+     * if it was existing will be incremented
+     */
     public String IsDuplicate(String targetID, List<Characters> existingList) {
         boolean exactMatchFound = false;
         int HighestSubVersionInt = 0;
@@ -1187,6 +1344,15 @@ public class MainController {
     }
 
 
+    /**
+     * Parses with commas separating each attribute from the imported text file, checks for {@link #IsDuplicate(String, List)}
+     * duplicate IDs and adds to the new {@link Characters} to {@code currentList}
+     *
+     * @param rawLine       Formated text line as {@code ID, State, Location, Importance, Description}
+     * @param currentList   The list being parsed to {@link Characters}
+     * @return              {@code true} if the lines being parsed was successful, {@code false} if soemthing is wrong
+     * with a line will not add that line.
+     */
     public boolean parseBatchLine(String rawLine, List<Characters> currentList) {
         if (rawLine == null || rawLine.trim().isEmpty()) return false;
         String[] data = rawLine.split(",", -1);
@@ -1224,6 +1390,13 @@ public class MainController {
             return false;
         }
     }
+
+
+    /**
+     * Entries from the Database {@link DatabaseController} and the text files {@code Characters.txt}
+     *
+     * @return  Gives a sorted {@link List} of {@link Characters}
+     */
     private List<Characters> ReadAllFromFile() {
         if (dbController != null) {
             return dbController.readAllFromDB();
@@ -1231,8 +1404,12 @@ public class MainController {
         return ReadAllFromFile(TextFileName);
     }
 
-
-
+    /**
+     *Reads from specified file inside of project, the characters entries inside being parsed for the project.
+     *
+     * @param customFilePath    The file being read by the system
+     * @return                  {@link List} of {@link Characters} of the parsed file, or can be empty if it could not be read.
+     */
     public List<Characters> ReadAllFromFile(String customFilePath) {
         List<Characters> list = new ArrayList<>();
         java.io.File file = new java.io.File(customFilePath);
@@ -1259,6 +1436,12 @@ public class MainController {
         return list;
     }
 
+    /**
+     * Sorts the {@link Characters} in nummerical order of 1 and 1.1 in order. Writes to the text file {@code Characters.txt}
+     * and jar file version.
+     *
+     * @param list {@link List} of {@link Characters} get sorted and saved into project.
+     */
     private void WriteAllToFile(List<Characters> list) {
         list.sort((c1, c2) -> {
             try {
@@ -1282,16 +1465,22 @@ public class MainController {
             }
         });
 
-        // 1. Always updates Characters.txt in the active launch folder
+        // Updates Characters.txt in the project folder
         writeCsvToPath(list, TextFileName);
 
-        // 2. If running from out/artifacts/NarrativeContainer_jar, also syncs the root project Characters.txt
+        // Updates If running from out/artifacts/NarrativeContainer_jar, also syncs the root project Characters.txt
         java.io.File projectRootCopy = new java.io.File("../../../" + TextFileName);
         if (projectRootCopy.exists() && projectRootCopy.isFile()) {
             writeCsvToPath(list, projectRootCopy.getPath());
         }
     }
 
+    /**
+     * Organizes a list of {@link Characters} into a comma separated format and overwrites the current file with the new changes
+     *
+     * @param list          The sortes {@link List} of {@link Characters} to write
+     * @param targetPath    The file to update with the changes
+     */
     private void writeCsvToPath(List<Characters> list, String targetPath) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(targetPath, false))) {
             for (Characters ch : list) {
@@ -1311,8 +1500,12 @@ public class MainController {
     }
 
 
-    // Starts the program loop when called
+    /**
+     * Starts the program loop when called to authenticate the connection and credentials to the MySQL database and then
+     * executing the CRUD operations system of the application.
+     */
     public void start() {
+        // Database connection added to the starting
         initializeDatabaseConnection();
         while (isRunning) {
             DisplayMenu();

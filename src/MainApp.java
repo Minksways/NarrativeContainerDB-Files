@@ -4,8 +4,22 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * JavaFX GUI Application entry for Narrative Container dashboard
+ * <p>
+ *     Loads {@code view.fxml}, starts {@link MainController}, starts MySQL Connection start, resets fields to blank and displays window
+ * </p>
+ *
+ * @author Michael (Minks) Cortes Muniz
+ */
 public class MainApp extends Application {
 
+    /**
+     * Starts and displays JavaFX {@link Stage} for Narrative Container dashboard
+     *
+     * @param primaryStage  The primary stage provided at runtime
+     * @throws Exception    If {@code View.fxml} could not be loaded ot found
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("View.fxml"));
@@ -21,6 +35,11 @@ public class MainApp extends Application {
         primaryStage.show();
     }
 
+    /**
+     * Launches the JavaFX application
+     *
+     * @param args command passed at start up
+     */
     public static void main(String[] args) {
         launch(args);
     }

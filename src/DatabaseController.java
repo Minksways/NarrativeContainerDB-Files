@@ -2,11 +2,30 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Creates and handles the JDBC connection, uses SQL database operations against MySQL {@code NarrativeContainerDB} database.
+ * <p>
+ * Handles login information to get into the database access via JDBC strings supplied by the user supplied credentials,
+ * establishes connection, executes SQL operations made to query, sort, insert, and delete {@link Characters}
+ * </p>
+ *
+ * @author Michael (Minks) Cortes Muniz
+ */
 public class DatabaseController {
+    /** JDBC Connection URL to target the MySQL host and {@code NarrativeContainerDB} schema*/
         private String url;
+    /** Username supplied at runtime*/
         private String user;
+    /** Password supplied at runtime*/
         private String password;
 
+    /**
+     * Constructs new {@code DatabaseController} with user supplied credentials
+     *
+     * @param hostAddress   The MySQL server hostname {@code "localhost3306"}
+     * @param user          The MySQL username used to authenticate
+     * @param password      The MySQL password used to authenticate
+     */
         public DatabaseController(String hostAddress, String user, String password) {
             // Formats address like "localhost:3306" or "127.0.0.1" into a full JDBC URL
             if (!hostAddress.contains(":")) {
@@ -16,6 +35,12 @@ public class DatabaseController {
             this.user = user;
             this.password = password;
         }
+
+    /**
+     * Tests whether a valid connection was established with the inputs
+     *
+     * @return  {@code true} if connection was established, {@code false} if not established and loops the DatabaseController
+     */
     public boolean testConnection() {
         try (Connection conn = connect()) {
             return conn != null && !conn.isClosed();
@@ -26,10 +51,22 @@ public class DatabaseController {
     }
 
 
+    /**
+     * Opens a connection {@link Connection} to the {@code NarrativeContainerDB}
+     *
+     * @return                  a JDBC {@link Connection} object
+     * @throws SQLException     If access errors occur or if credentials do not match.
+     */
     public Connection connect() throws SQLException {
             return DriverManager.getConnection(url, user, password);
         }
 
+
+    /**
+     * Queries all the rows from {@code characters} in MySQL tables, and puts them to {@link Characters} object, sorting everything/
+     *
+     * @return  Sorted {@llink List} of {@link Characters}
+     */
         public List<Characters> readAllFromDB() {
             List<Characters> list = new ArrayList<>();
             String query = "SELECT * FROM characters";
@@ -69,6 +106,11 @@ public class DatabaseController {
             return list;
         }
 
+    /**
+     * Inserts into {@link Characters} into {@code characters} table using {@link PreparedStatement} to avoid SQL Injections
+     * @param ch    The {@link Characters} with the attributes to insert into MySQL
+     * @return      {@code true} if at least one row was a success, {@code false} if insert failed
+     */
         public boolean insertCharacter(Characters ch) {
             String sql = "INSERT INTO characters (character_id, current_state, " +
                     "location, importance_state, character_description) VALUES (?, ?, ?, ?, ?)";
@@ -86,6 +128,12 @@ public class DatabaseController {
             }
         }
 
+    /**
+     * Deletes a row from {@code characters} table if ID matches and is confirmed.
+     *
+     * @param targetID  Unique ID
+     * @return          {@code true} if removed, {@code false} if failed
+     */
         public boolean deleteCharacterByID(String targetID) {
             String sql = "DELETE FROM characters WHERE character_id = ?";
             try (Connection conn = connect();

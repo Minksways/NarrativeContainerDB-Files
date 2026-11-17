@@ -1,21 +1,49 @@
-/* Michael (Minks) Cortes Muniz
-This is a testing phase of making sure the main logic of the writing code works, this code is meant
-to be a way for adding new information into a text file for now (Eventually into a Database).
-It reads two text files Characters.txt.txt and Characters_BatchTester.txt,txt
-Methods of adding in information, reading, deleting and updating entries are all within this code, and
-lets go over all sections as best as possible.
-* */
+/**
+ * This is how a single Narrative Container Entry is formated for the insertions into
+ * text files.
+ * <p>
+ * This Class is for the five different elements inside an entry these being: A unique identifier ID to be able to search
+ * for it in a populated list, A true or false state for if the character lives or has died, a location marker for where
+ * in the world of the story they can be found, another true or false for if the character has importance to plot or not,
+ * and a very descriptive text of the character in this instance to allow for that characters backstory in full.
+ * </p>
+ *
+ * @author Michael (Minks) Cortes Muniz
+ */
 
-// Only change from here was Int to String for CharacterID due to issues with incrementing.
 public class Characters {
+    /**
+     * Unique ID number that can either be a 1 or 1.1 in the area containing entry
+     */
     private String CharacterID;
+    /**
+     * Living or dead state of the charcter (t or f)
+     */
     private boolean CurrentState;
+    /**
+     * A String for the location of the charcter
+     */
     private String Location;
+    /**
+     * A importance identifier (t or f)
+     */
     private boolean ImportanceState;
+    /**
+     * The big descriptive text section of the character
+     */
     private String CharacterDescription;
 
 
-    // Constructor with everything inside.
+    /**
+     * Constructor of the entries
+     *
+     *
+     * @param CharacterID           Unique ID
+     * @param CurrentState          Living Status
+     * @param Location              Location in story
+     * @param ImportanceState       Plot importance
+     * @param CharacterDescription  Character backstory
+     */
     public Characters(String CharacterID, boolean CurrentState, String Location,
                boolean ImportanceState, String CharacterDescription) {
         this.CharacterID = CharacterID;
@@ -25,19 +53,44 @@ public class Characters {
         this.CharacterDescription = CharacterDescription;
     }
 
+    /**
+     * Returns the Characters ID
+     *
+     * @return
+     */
     // getter methods for the main controller of the project.
     public String getCharacterID()
     { return CharacterID; }
 
+    /**
+     * Returns the living Status
+     *
+     * @return
+     */
     public boolean getCurrentState()
     { return CurrentState; }
 
+    /**
+     * Returns the Location of the Character
+     *
+     * @return
+     */
     public String getLocation()
     { return Location; }
 
+    /**
+     * Returns plot importance
+     *
+     * @return
+     */
     public boolean getImportanceState()
     { return ImportanceState; }
 
+    /**
+     * Returns the character's backstory text
+     *
+     * @return
+     */
     public String getCharacterDescription()
     { return CharacterDescription; }
 }
