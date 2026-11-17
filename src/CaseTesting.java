@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * JJUnit 5 Testing section for running automate failing and passing states to simulate database states and verify
+ * JUnit 5 Testing section for running automate failing and passing states to simulate database states and verify
  * both affirmative and negative pass requirements.
  *
  * @author Michael (Minks) Cortes Muniz
